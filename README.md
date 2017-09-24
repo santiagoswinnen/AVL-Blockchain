@@ -9,3 +9,5 @@ con distancia menor a este numero.
 Data del Block
 Para alamacenar la operacion vamos a armar un "diccionario" en el que cada operacion corresponda a un numero y eso
 facilitara las reiteradas lecturas del dato
+Se está guardando la altura en los nodos.
+
