@@ -8,12 +8,11 @@ import java.util.*;
 public class AVLTree<T> {
     private Node<T> root;
     private Comparator<T> cmp;
-    private int height;
 
-
-    protected static class Node<T> {
-        private Node<T> root;
-        private Comparator<T> cmp;
+    public AVLTree(Comparator<T> cmp){
+        this.cmp = cmp;
+    }
+    private static class Node<T> {
         private Node<T> left;
         private Node<T> right;
         private T key;
@@ -31,45 +30,57 @@ public class AVLTree<T> {
             this.right = right;
             this.key = key;
         }
-
-    }
-
-
-
-    public void add(T key) {
-        if(root == null) {
-            root = new Node<>(key);
-            return;
+        public String toString(){
+            return "-" + key.toString()  + "(" + height + ")" +"-";
         }
-        add(key, root);
+        public int getHeight(){
+            return height;
+        }
+        public int getRightChildHeight(){
+            if(right == null){
+                return -1;
+            }
+            return right.height;
+        }
+
+        public int getLeftChildHeight(){
+            if(left == null){
+                return -1;
+            }
+            return left.height;
+        }
     }
 
-    private int add(T key, Node<T> current) {
 
+
+    public boolean add(T key) {
+        Node<T> aux = add(key, root);
+        if(aux == null) return false;
+            return true;
+    }
+
+    private Node<T> add(T key, Node<T> current) {
+        Node<T> aux;
+        if(current == null){
+            return new Node<T>(key);
+        }
         if(cmp.compare(key,current.key) < 0 ){
-            int leftH;
-            if(current.left != null){
-                leftH = add(key, current.left);
-            }
-            else{
-                current.left = new Node<T>(key);
-                leftH = 0;
-            }
-            current.height = Math.max(leftH + 1, current.height);
+            aux = add(key, current.left);
+            if(aux == null) return null;
+            current.left = aux;
+            current.height = Math.max(current.height, current.getLeftChildHeight() + 1);
         }
         else if(cmp.compare(key,current.key) > 0 ){
-            int rightH;
-            if(current.right != null) {
-                rightH = add(key, current.right);
-            }
-            else {
-                current.right = new Node<T>(key);
-                rightH = 0;
-            }
-            current.height = Math.max(rightH + 1, current.height);
+            aux = add(key, current.right);
+            if(aux == null) return null;
+            current.right = aux;
+            current.height = Math.max(current.height, current.getRightChildHeight() + 1);
+        }
+        else {
+            return null;
         }
         current = balance(current);
-        return current.height;
+        return current;
     }
 
     public Node<T> balance(Node<T> current){
@@ -82,7 +93,7 @@ public class AVLTree<T> {
             }
             /*left right*/
             else{
-                current = leftRotation(current);
+                current.left = leftRotation(current.left);
                 current = rightRotation(current);
             }
         }
@@ -94,141 +105,111 @@ public class AVLTree<T> {
             }
             /*right left*/
             else{
-                current = rightRotation(current);
+                current.right = rightRotation(current.right);
                 current = leftRotation(current);
             }
         }
         return current;
     }
 
-    public int getBalance(Node<T> current){
-        return current.left.height-current.right.height;
-    }
 
-    public boolean remove(T key){
-        if(root == null)
-            return false;
-        else if(root.key.equals(key)){
-            root = null;
-            return true;
-        }
-        if(remove(key, root, cmp) == -1)
-            return false;
-        return true;
-    }
-
-    private int  remove(T key, Node<T> current, Comparator<T> cmp){
-        /*bajo por la izquierda*/
-        if(cmp.compare(key, current.key) < 0 ){
-            int leftH;
-            if(current.left != null){
-                if(current.left.key.equals(key)){
-                    current.left = deleteKey(current.left);
-                    leftH = current.left.height;
-                } else {
-                    leftH = remove(key, current.left, cmp);
-                }
-                if(leftH == -1)
-                    return -1;
-            } else{
-                return -1;
-            }
-            current.height = Math.max(current.right.height + 1, leftH + 1);
-        }
-        /*bajo por la derecha*/
-        else if(cmp.compare(key, current.key) > 0){
-            int rightH;
-            if(current.right != null){
-                if(current.right.key.equals(key)){
-                    current.right = deleteKey(current.right);
-                    rightH = current.right.height;
-                } else {
-                    rightH = remove(key, current.right, cmp);
-                }
-                if(rightH == -1){
-                    return -1;
-                }
-            }else{
-                return -1;
-            }
-            current.height = Math.max(current.left.height + 1, rightH + 1);
-        }
-        current = balance(current);
-        return current.height;
-    }
-
-    public Node<T> deleteKey(Node<T> current){
-        if(current.left !=null && current.right != null) {
-            Node<T> aux = getMostLeftWrapper(current.right);
-            aux.left = current.left;
-            if(aux.right == current.right){
-                aux.right = null;
-            }
-            else{
-                aux.right = current.right;
-            }
-            current = aux;
-        }else if (current.left == null && current.right != null)
-            current = current.right;
-        else if (current.left != null)
-            current = current.left;
-        else
-            current = null;
-        return current;
-    }
-
-    private Node<T> getMostLeftWrapper(Node<T> current){
-        if(current == null){
-            throw new NoSuchElementException("There is un sucesor inorder");
-        }
-        return getMostLeft(current);
-    }
-
-    private Node<T> getMostLeft(Node<T> current) {
-        Node<T> aux;
-        if (current.left != null) {
-            aux = current.left;
-            if (aux.right == null && aux.left == null) {
-                current.left = null;
-                current.height = Math.max(current.height - 1, current.right.height + 1);
-                return aux;
-            }
-            current.height = Math.max(current.height-1 , current.right.height +1);
-            return getMostLeft(current.left);
-        } else if (current.right != null){
-            aux = current.right;
-            if (aux.right == null && aux.left == null) {
-                current.right = null;
-                current.height = Math.max(current.height - 1, current.left.height + 1);
-                return aux;
-            }
-            current.height = Math.max(current.height-1, current.left.height +1);
-            return getMostLeft(current.right);
-        }
-        else{
-            return current;
-        }
-    }
-
-
-
-    private Node<T> rightRotation(Node<T> current){
+    private Node<T> leftRotation(Node<T> current){
         Node<T> auxright = current.right;
         current.right = auxright.left;
         auxright.left = current;
-        current.height = Math.max(current.left.height, current.right.height);
-        auxright.height = Math.max(auxright.left.height, auxright.right.height);
+        current.height = Math.max(current.getLeftChildHeight(), current.getRightChildHeight());
+        auxright.height = Math.max(auxright.height, current.height + 1);
         return auxright;
     }
 
-    private Node<T> leftRotation(Node<T> current){
+    private Node<T> rightRotation(Node<T> current){
         Node<T> auxleft = current.left;
         current.left = auxleft.right;
         auxleft.right = current;
-        current.height = Math.max(current.left.height, current.right.height);
-        auxleft.height = Math.max(auxleft.left.height, auxleft.right.height);
+        current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
+        auxleft.height = Math.max(auxleft.height, current.height + 1);
         return auxleft;
     }
+
+    public int getBalance(Node<T> current){
+        int leftH, rightH;
+        return current.getLeftChildHeight() - current.getRightChildHeight();
+    }
+    public boolean remove(T key){
+        DataPair<Boolean,Node<T>> aux = remove(key, root);
+        root = aux.getElement2();
+        return aux.getElement1();
+
+    }
+    private DataPair<Boolean, Node<T>> remove(T key, Node<T> current){
+        if(current == null){
+            return new DataPair<>(false,null);
+        }
+        DataPair<Boolean,Node<T>> aux;
+        if(cmp.compare(key, current.key) < 0){
+            aux = remove(key, current.left);
+            if(aux.getElement1()) current.left = aux.getElement2();
+            current.left = aux.getElement2();
+        }
+        else if(cmp.compare(key, current.key) > 0){
+            aux = remove(key, current.right);
+            if(aux.getElement1()) current.right = aux.getElement2();
+            return new DataPair<>(aux.getElement1(), current);
+        }
+        else {
+            current = deleteKey(current);
+            current = balance(current);
+            return new DataPair<>(true, current);
+        }
+        current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
+        current = balance(current);
+        return new DataPair<>(aux.getElement1(), current);
+    }
+
+
+    public Node<T> deleteKey( Node<T> node) {
+        if (node.right == null && node.left == null) {
+            return null;
+        } else if (node.right == null) {
+            return node.left;
+        } else if (node.left == null) {
+            return node.right;
+        } else {
+            /*busco el sucesor inorder*/
+            DataPair<Node<T>, Node<T>> aux = eliminateMostLeft(node.right);
+            Node<T> ret = aux.getElement2();
+            /*puede pasar que el nodo sucesor inorder sea el hijo derecho
+            del que quiero eliminar*/
+            if(ret == node.right) ret.right = null;
+            else ret.right = node.right;
+            ret.left = node.left;
+
+            ret.height = Math.max(ret.left. height, ret.getRightChildHeight() + 1);
+            return ret;
+        }
+    }
+
+    private DataPair<Node<T>,Node<T>> eliminateMostLeft(Node<T> current){
+        if(current == null){
+            throw new NoSuccesorInorderException("There was no succesor inorder.");
+        }
+        DataPair<Node<T>, Node<T>> aux;
+        if(current.left != null){
+            aux = eliminateMostLeft(current.left);
+            current.left = aux.getElement1();
+        }
+        else if(current.right != null){
+            aux = eliminateMostLeft(current.right);
+            current.right = aux.getElement1();
+        } else {
+            return new DataPair<>(null, current);
+        }
+        current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
+        return new DataPair<>(current, aux.getElement2());
+    }
+
+
+
 
 
     public List<T> getInRange(T inf, T sup) {
@@ -259,19 +240,22 @@ public class AVLTree<T> {
             return;
         queue.offer(root);
         int i = 0 ;
-        double number = 0;
+        double number = 1;
         while (!queue.isEmpty()) {
+
             Node<T> aux = queue.remove();
+
             if(	Math.log(number)/Math.log(2.0) == i ){
-                System.out.println();
+                System.out.println(" LEVEL + 1 = " + Math.log(number)/Math.log(2.0) );
                 i++;
+
             }
-            System.out.print(aux.key + " ");
+            System.out.print(" " + aux.toString() + " ");
 
             if (aux.left != null) {
                 queue.offer(aux.left);
             }
-            if (aux.left != null) {
+            if (aux.right != null) {
                 queue.offer(aux.right);
             }
             number++;
