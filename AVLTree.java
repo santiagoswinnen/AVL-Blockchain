@@ -3,7 +3,7 @@ import com.sun.org.apache.xerces.internal.impl.dv.xs.TypeValidator;
 import java.util.*;
 
 /**
- * Created by sswinnen on 21/09/17.
+ *  @author Lóránt Mikolás
  */
 public class AVLTree<T> {
     private Node<T> root;
@@ -12,11 +12,14 @@ public class AVLTree<T> {
     public AVLTree(Comparator<T> cmp){
         this.cmp = cmp;
     }
+
     private static class Node<T> {
         private Node<T> left;
         private Node<T> right;
         private T key;
         private int height = 0;
+        /*indexes of the BlockChain's blocks  that affected this node*/
+        private HashSet<Integer> modIndex = new HashSet<>();
 
         public Node(T key) {
             height = 0;
@@ -30,12 +33,17 @@ public class AVLTree<T> {
             this.right = right;
             this.key = key;
         }
+
+        @Override
         public String toString(){
             return "-" + key.toString()  + "(" + height + ")" +"-";
         }
+
         public int getHeight(){
             return height;
         }
+
+
         public int getRightChildHeight(){
             if(right == null){
                 return -1;
@@ -52,159 +60,264 @@ public class AVLTree<T> {
     }
 
 
-
-    public boolean add(T key) {
-        Node<T> aux = add(key, root);
+    /**
+     * Adds a new element to the AVLTree.
+     * This method serves as a wrapper.
+     * @param key element to add.
+     * @param blockIndex index of the BlockChain's block that has the add operation.
+     * @return boolean that is true if element is added or false otherwise
+     */
+    public boolean add(T key, int blockIndex) {
+        Node<T> aux = add(key, root, blockIndex);
         if(aux == null) return false;
-            return true;
+        root = aux;
+        return true;
     }
 
-    private Node<T> add(T key, Node<T> current) {
+    /**
+     * Adds a new element to the AVLTree recursively. Checks balance, updates height and
+     * and updates the indexes of the blocks that affected the node on the way back of the
+     * recursion.
+     * @param key element to add.
+     * @param current current element in the recursion.
+     * @param blockIndex index of the BlockChain's block that has the add operation.
+     * @return child node in recursion or null if key is already present in the AVLTree.
+     */
+    private Node<T> add(T key, Node<T> current, int blockIndex) {
         Node<T> aux;
+        /*if the leaf is reached, add a new node*/
         if(current == null){
-            return new Node<T>(key);
+            System.out.println("agregue uno nuevo");
+            return new Node<>(key);
         }
+        /*advance through left child*/
         if(cmp.compare(key,current.key) < 0 ){
-            aux = add(key, current.left);
+
+            aux = add(key, current.left, blockIndex); //calls recursive method.
             if(aux == null) return null;
+            if(aux != current.left) current.modIndex.add(blockIndex);
             current.left = aux;
+            /*update current nodes height*/
             current.height = Math.max(current.height, current.getLeftChildHeight() + 1);
         }
+        /*advance through right child*/
         else if(cmp.compare(key,current.key) > 0 ){
-            aux = add(key, current.right);
+
+            aux = add(key, current.right, blockIndex); //calls recursive method.
             if(aux == null) return null;
+            if(aux != current.right) current.modIndex.add(blockIndex);
             current.right = aux;
+            /*update current nodes height*/
             current.height = Math.max(current.height, current.getRightChildHeight() + 1);
         }
         else {
             return null;
         }
-        current = balance(current);
+        current = balance(current, blockIndex);
         return current;
     }
 
-    public Node<T> balance(Node<T> current){
+    /**
+     * Checks balance of the node.
+     * @param current Node that is verified for a correct factor of balance.
+     * @param blockIndex index of the BlockChain's block that has the add operation. It's used
+     *                   in case  a rotation is needed.
+     * @return a new node in case the current was affected by a rotation.
+     */
+    public Node<T> balance(Node<T> current, int blockIndex){
         int balance = getBalance(current);
+        /*checks FB*/
         if(balance > 1){
             /*left left*/
             if(getBalance(current.left) >= 0){
-                current = rightRotation(current);
+                current = rightRotation(current, blockIndex);
 
             }
             /*left right*/
             else{
-                current.left = leftRotation(current.left);
-                current = rightRotation(current);
+                current.left = leftRotation(current.left, blockIndex);
+                current = rightRotation(current, blockIndex);
             }
         }
+        /*checks FB*/
         else if(balance < -1){
             /*right right*/
             if(getBalance(current.right) <= 0) {
-                current = leftRotation(current);
+                current = leftRotation(current, blockIndex);
 
             }
             /*right left*/
             else{
-                current.right = rightRotation(current.right);
-                current = leftRotation(current);
+                current.right = rightRotation(current.right, blockIndex);
+                current = leftRotation(current, blockIndex);
             }
         }
         return current;
     }
 
-
-    private Node<T> leftRotation(Node<T> current){
+    /**
+     * Performs a left rotation to the current node
+     * @param current node to be rotated.
+     * @param blockIndex index of the BlockChain's block that has the add operation. Every node
+     *                   affected by this rotation will update the indexes of the blocks that modified said node.
+     * @return the new root of the subtree.
+     */
+    private Node<T> leftRotation(Node<T> current, int blockIndex){
         Node<T> auxright = current.right;
         current.right = auxright.left;
         auxright.left = current;
         current.height = Math.max(current.getLeftChildHeight(), current.getRightChildHeight());
         auxright.height = Math.max(auxright.height, current.height + 1);
+        current.modIndex.add(blockIndex);
+        auxright.modIndex.add(blockIndex);
+        if(current.right != null) current.right.modIndex.add(blockIndex);
         return auxright;
     }
-
-    private Node<T> rightRotation(Node<T> current){
+    /**
+     * Performs a right rotation to the current node
+     * @param current node to be rotated.
+     * @param blockIndex index of the BlockChain's block that has the add operation. Every node
+     *                   affected by this rotation will update the indexes of the blocks that modified said node.
+     * @return the new root of the subtree.
+     */
+    private Node<T> rightRotation(Node<T> current, int blockIndex){
         Node<T> auxleft = current.left;
         current.left = auxleft.right;
         auxleft.right = current;
         current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
         auxleft.height = Math.max(auxleft.height, current.height + 1);
+        current.modIndex.add(blockIndex);
+        auxleft.modIndex.add(blockIndex);
+        if(current.left != null) current.left.modIndex.add(blockIndex);
         return auxleft;
     }
 
+    /**
+     * Calculates the height diference between left and right child. An Empty AVLTree is considered
+     * balanced.
+     * @param current Node to get balance from.
+     * @return FB.
+     */
     public int getBalance(Node<T> current){
-        int leftH, rightH;
+        if(current == null) return 0;
         return current.getLeftChildHeight() - current.getRightChildHeight();
     }
-    public boolean remove(T key){
-        DataPair<Boolean,Node<T>> aux = remove(key, root);
+
+    /**
+     * Removes a key from the AVLTree.
+     *  A DataPair is used to allow for two return values for the remove method.
+     * @param key element to be removed from AVLTree.
+     * @param blockIndex index of the BlockChain's block that has the remove operation.
+     * @return true if removal was successful or false otherwise.
+     */
+    public boolean remove(T key, int blockIndex){
+        DataPair<Boolean,Node<T>> aux = remove(key, root, blockIndex);
         root = aux.getElement2();
         return aux.getElement1();
 
     }
-    private DataPair<Boolean, Node<T>> remove(T key, Node<T> current){
+    /**
+     * Removes a key from the AVLTree recursively. Checks balance, updates height and
+     * and updates the indexes of the blocks that affected the node on the way back of the
+     * recursion.
+     * This method serves a wrapper. A DataPair is used to allow for two return values for the remove method.
+     * @param key element to be removed from AVLTree.
+     * @param blockIndex index of the BlockChain's block that has the remove operation.
+     * @return a DataPair. The element1 of the DataPair indicates if the removal was successful or not with a
+     * boolean and element2 is the new child returned in the recursion.
+     */
+    private DataPair<Boolean, Node<T>> remove(T key, Node<T> current, int blockIndex){
+        /*if the element was not found returns false (unsuccessfull removal)*/
         if(current == null){
             return new DataPair<>(false,null);
         }
         DataPair<Boolean,Node<T>> aux;
+        Node<T> node;
+        /*advance through left child*/
         if(cmp.compare(key, current.key) < 0){
-            aux = remove(key, current.left);
-            if(aux.getElement1()) current.left = aux.getElement2();
-            current.left = aux.getElement2();
+            aux = remove(key, current.left, blockIndex);
+            node = aux.getElement2();
+            if(current.left != node) current.modIndex.add(blockIndex);
+            current.left = node;
         }
+        /*advance through right child*/
         else if(cmp.compare(key, current.key) > 0){
-            aux = remove(key, current.right);
-            if(aux.getElement1()) current.right = aux.getElement2();
-            return new DataPair<>(aux.getElement1(), current);
+            aux = remove(key, current.left, blockIndex);
+            node = aux.getElement2();
+            if(current.right != node) current.modIndex.add(blockIndex);
+            current.right = node;
         }
+        /*element found*/
         else {
-            current = deleteKey(current);
-            current = balance(current);
+            current = deleteKey(current, blockIndex);
+            current = balance(current, blockIndex);
             return new DataPair<>(true, current);
         }
-        current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
-        current = balance(current);
+        /*if removal was successful, updates height and checks balance on the way back*/
+        if(aux.getElement1()) {
+            current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
+            current = balance(current, blockIndex);
+        }
         return new DataPair<>(aux.getElement1(), current);
     }
 
+    /**
+     * Removes key from the AVLTree in different ways depending on the right and left child.
+     * @param node  to be removed from the AVLTree/
+     * @param blockIndex index of the BlockChain's block that has the remove operation.
+     * @return the new node or null that will take the place of the removed node.
+     */
 
-    public Node<T> deleteKey( Node<T> node) {
+    public Node<T> deleteKey( Node<T> node, int blockIndex) {
+        /*no childs*/
         if (node.right == null && node.left == null) {
             return null;
+        /*has just left child*/
         } else if (node.right == null) {
+            node.right.modIndex.add(blockIndex);
             return node.left;
+        /*has just right child*/
         } else if (node.left == null) {
+            node.left.modIndex.add(blockIndex);
             return node.right;
+        /*search for the successor inorder*/
         } else {
-            /*busco el sucesor inorder*/
-            DataPair<Node<T>, Node<T>> aux = eliminateMostLeft(node.right);
+            DataPair<Node<T>, Node<T>> aux = eliminateMostLeft(node.right, blockIndex);
             Node<T> ret = aux.getElement2();
-            /*puede pasar que el nodo sucesor inorder sea el hijo derecho
-            del que quiero eliminar*/
+            /*it may occur that the inorder successor is the right child*/
             if(ret == node.right) ret.right = null;
             else ret.right = node.right;
             ret.left = node.left;
 
-            ret.height = Math.max(ret.left. height, ret.getRightChildHeight() + 1);
+            ret.height = Math.max(ret.getLeftChildHeight() + 1, ret.getRightChildHeight() + 1);
+            ret.modIndex.add(blockIndex);
             return ret;
         }
     }
 
-    private DataPair<Node<T>,Node<T>> eliminateMostLeft(Node<T> current){
+    /**
+     * Removes the successor inorder from its current position and returns it recursively.  Checks balance, updates height and
+     * and updates the indexes of the blocks that affected the node on the way back of the
+     * recursion.
+     * @param current node in the recursion.
+     * @param blockIndex index of the BlockChain's block that has the remove operation.
+     * @return a DataPair in which the element1 is the new child in recursion and element2 is the succesor inorder.
+     */
+    private DataPair<Node<T>,Node<T>> eliminateMostLeft(Node<T> current, int blockIndex){
         if(current == null){
             throw new NoSuccesorInorderException("There was no succesor inorder.");
         }
         DataPair<Node<T>, Node<T>> aux;
         if(current.left != null){
-            aux = eliminateMostLeft(current.left);
+            /*call recursion*/
+            aux = eliminateMostLeft(current.left, blockIndex);
+            if(current.left != aux.getElement1()) current.modIndex.add(blockIndex);
             current.left = aux.getElement1();
-        }
-        else if(current.right != null){
-            aux = eliminateMostLeft(current.right);
-            current.right = aux.getElement1();
         } else {
             return new DataPair<>(null, current);
         }
         current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
+        current = balance(current, blockIndex);
         return new DataPair<>(current, aux.getElement2());
     }
 
@@ -236,21 +349,29 @@ public class AVLTree<T> {
 
     public void printNodesByLevel() {
         Deque<Node<T>> queue = new LinkedList<>();
-        if (root == null)
-            return;
+        System.out.println("jeeywsya");
+        if (root == null){
+
+            return;}
         queue.offer(root);
         int i = 0 ;
+        int j = 10;
         double number = 1;
         while (!queue.isEmpty()) {
-
             Node<T> aux = queue.remove();
 
             if(	Math.log(number)/Math.log(2.0) == i ){
                 System.out.println(" LEVEL + 1 = " + Math.log(number)/Math.log(2.0) );
                 i++;
-
+                j = j - 2 ;
+                int k = 0;
+                while(k < j){
+                    k++;
+                    System.out.print("  ");
+                }
             }
-            System.out.print(" " + aux.toString() + " ");
+
+            System.out.print( aux.toString() + "      ");
 
             if (aux.left != null) {
                 queue.offer(aux.left);
@@ -382,7 +503,7 @@ public class AVLTree<T> {
         if (current == null && other == null)
             return true;
         boolean right, left;
-        if (current.key.equals(other.key)) {
+        if (current.key.equals(other.key) && current.height == other.height) {
             return equals(current.right, other.right) && equals(current.left, other.left);
         }
         return false;
