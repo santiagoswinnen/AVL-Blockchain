@@ -108,7 +108,7 @@ public class Terminal {
                 System.out.println("Invalid number, try again please");
             }
         } else if(action.equals("modify")) {
-            /* Modify case missing. To be done soon! */
+            /* Modify case missing. To be done soon!! */
         } else {
             System.out.println("Invalid action, try again please");
         }
