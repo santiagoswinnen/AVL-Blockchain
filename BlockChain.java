@@ -2,7 +2,6 @@
 
 import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class BlockChain<T> {
@@ -116,9 +115,9 @@ public class BlockChain<T> {
 	}
 	
 	public void createGenesisBlock() {
-		
+
 		AVL<T> tree = new AVL<T>((Comparator<T>) new MyComparator());
-		String dummyHash = "00000000";	
+		String dummyHash = "00000000";
 		blockChain.add(new Block<T>(0,"No instruction",tree,dummyHash));
 	}
 	

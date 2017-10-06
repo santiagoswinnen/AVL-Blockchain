@@ -38,12 +38,12 @@ public class Terminal {
     private boolean validateNumber(char[] s) {
         boolean isNumber = true;
         int index;
-        for(index=0; s[index] != 0 && isNumber; index++) {
+        for(index = 0; index < s.length && isNumber; index++) {
             if(!Character.isDigit(s[index])) {
                 isNumber = false;
             }
         }
-        return true;
+        return isNumber;
     }
 
     /**
@@ -76,18 +76,19 @@ public class Terminal {
 
     public void readInstruction(String instruction, BlockChain bc) {
         char[] chars = instruction.toCharArray();
-        char[] word = {};
         int i;
-        for(i = 0; chars[i] != ' '; i++) {
-            word[i] = chars[i];
+        String action= new String();
+        for(i = 0; i < chars.length && chars[i] != ' '; i++) {
+            char current = chars[i];
+            action = action + String.valueOf(current);
         }
         i++;
-        String action = word.toString();
 
         /*
          * if the first word is "validate" and no other argument is read,
          * then perform the action validate on the block chain and return
          */
+
         if(action.equals("validate")) {
             if(action.equals(instruction)) {
                 boolean c = bc.validateChain();
@@ -95,11 +96,11 @@ public class Terminal {
                 return;
             }
         } else if(action.equals("add") || action.equals("remove") || action.equals("lookup")) {
-            char[] number = {};
-            for(int j = 0; chars[i] != ' '; i++, j++) {
-                number[j] = chars[i];
+            String number = new String();
+            for(int j = 0; i < chars.length && chars[i] != ' '; i++, j++) {
+                number = number + chars[i];
             }
-            boolean isNumber = validateNumber(number);
+            boolean isNumber = validateNumber(number.toCharArray());
             if(isNumber) {
                 String num = number.toString();
                 bc.add(action,Integer.parseInt(num));
@@ -109,7 +110,7 @@ public class Terminal {
         } else if(action.equals("modify")) {
             /* Modify case missing. To be done soon! */
         } else {
-            System.out.println("Invalid action, please try again");
+            System.out.println("Invalid action, try again please");
         }
 
     }
