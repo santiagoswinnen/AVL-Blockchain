@@ -1,4 +1,4 @@
-package chainpackage;
+
 
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -109,6 +109,10 @@ public class BlockChain<T> {
 		    }
 			
 		}
+	}
+
+	public void add(String action, int number){
+
 	}
 	
 	public void createGenesisBlock() {
