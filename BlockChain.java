@@ -2,16 +2,25 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class BlockChain {
-	
+	private Terminal terminal;
 	private int zeros;
-	private AVLTree<Integer> tree = new AVLTree<Integer>(new Comparator); //no hay que usar un comparator ya que usamos solo int, hay que cambiarlo en el AVL
+
+	private AVLTree<Integer> tree = new AVLTree<>(new Comparator<Integer>() {
+        @Override
+        public int compare(Integer o1, Integer o2) {
+            return o1.compareTo(o2);
+        }
+    });
 	private List<Block> blockChain = new ArrayList<Block>();
 	
-	public BlockChain(int zeros) {
-		this.zeros = zeros;
+	public BlockChain(int zeros, Terminal terminal) {
+		this.terminal = terminal;
+	    this.zeros = zeros;
 		createGenesisBlock();
+
 	}
 	
 	public int getZeros() {
@@ -111,28 +120,45 @@ public class BlockChain {
 		}
 	}
 
-	public void add(String action, int number){  //No entiendo que seria el String action, osea si estas llamando a add ya sabes que es un "add" + number
+    /**
+     * Receives instruction to perform on AVLTree, calls the correct method to excecute it and stores result in new block.
+     * @param action Mehtod to call
+     * @param number
+     */
+	public void operate(String action, int number){  //No entiendo que seria el String action, osea si estas llamando a add ya sabes que es un "add" + number
+        int currentIndex = size();
+        Boolean success;
+        String instruction;
+        switch(action){
+            case "add": success = tree.add(number, currentIndex); break;
+            case "remove": success = tree.remove(number,currentIndex); break;
+            case "lookup": DataPair<Boolean,Set<Integer>> aux = tree.lookup(number);
+                            success = aux.getElement1();
+                            if(success) {
+                                terminal.printMessage("Indexes that modified Node with data (" + number + "):");
+                                terminal.printMessage(aux.getElement2().toString());
+                            } else {
+                                terminal.printMessage("Element (" + number + ") was not found in AVL Tree" );
+                            }break;
+            default: throw new IllegalOperationException("not a valid operation to perform");
+            /*falta agregar case modify y validate*/
+
+        }
+        instruction = action + number + success.toString();
+        Block block = new Block(currentIndex, instruction, getLatestBlock().getHash());
 
 	}
-	
+
+
 	private void createGenesisBlock() {
 		
 		blockChain.add(new Block(0,"No instruction","00000000"));
 	}
-	
-	public void addElement(Integer num) {   
-		
-		Block lastBlock = getLatestBlock();
-		int index = lastBlock.getIndex() + 1;
-		boolean inserted = tree.add(num,index);	
-		String instruction = "add" + num.toString() + (inserted? "true" : "false");
-		Block block = new Block(index,instruction,lastBlock.getHash());
-		blockChain.add(block);
-		
-	}
-	
+
+
 	public List<Block> getChain() {
-		return blockChain;
+
+	    return blockChain;
 	}
 	
 	public boolean validateChain() {
@@ -151,37 +177,13 @@ public class BlockChain {
 		}
 		return true;
 	}
-	
-	public void remove(Integer num) {
-			
-		Block lastBlock = getLatestBlock();
-		int index = lastBlock.getIndex() + 1;
-		boolean removed = tree.remove(num,index);	
-		String instruction = "remove" + num.toString() + (removed? "true" : "false");
-		Block block = new Block(index,instruction,lastBlock.getHash());
-		blockChain.add(block);
 
-	}
-	
-	public void lookup(Integer num) {
-		
-		Block lastBlock = getLatestBlock();
-		int index = lastBlock.getIndex() + 1;
-		DataPair<Block,boolean> info = tree.contains(num);	 //Deberia retornar un data pair con true/false si encontro o no y el bloque para poder tener los indices
-		boolean found = info.getElement2();
-		String instruction = "lookup" + num.toString() + (found? "true" : "false");
-		Block block = new Block(index,instruction,lastBlock.getHash());
-		blockChain.add(block);
-		
-		if(found) {
-			
-			System.out.println("Indexes that modified Node with data (" + num.toString() + ") : " + info.getElement1().getSet().toString());			
-		}
-		else {
-			System.out.println("Element (" + num.toString() + ") was not found in AVL Tree" );
-		}
+
+	public int size(){
+		return blockChain.size();
 	}
 	public Block getLatestBlock() {
-		return getChain().get(getChain().size() - 1);
+
+		return blockChain.get(size() - 1);
 	}
 }
