@@ -140,6 +140,8 @@ public class BlockChain {
                             } else {
                                 terminal.printMessage("Element (" + number + ") was not found in AVL Tree" );
                             }break;
+            case "validate" : success = validateChain();
+			      terminal.printMessage(success.toString());	
             default: throw new IllegalOperationException("not a valid operation to perform");
             /*falta agregar case modify y validate*/
 
