@@ -1,13 +1,13 @@
-
-
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-public class BlockChain<T> {
+public class BlockChain {
 	
 	private int zeros;
-	private List<Block<T>> blockChain = new ArrayList<Block<T>>();
+	private AVLTree<Integer> tree = new AVLTree<Integer>(new Comparator); //no hay que usar un comparator ya que usamos solo int, hay que cambiarlo en el AVL
+	private List<Block> blockChain = new ArrayList<Block>();
 	
 	public BlockChain(int zeros) {
 		this.zeros = zeros;
@@ -18,24 +18,20 @@ public class BlockChain<T> {
 		return zeros;
 	}
 	
-	private class Block<T> {
+	private class Block {
 		
 		private int index;
 		private long nonce;
-		private String instruction;
+		private String instruction; //"add 5 true", "remove 3 true"
 		private String hash;
 		private String prevHash;
-		private AVL<T> tree;
 		
-		public Block(int index, String instruction, AVL<T> tree, String prevHash) {
+		
+		public Block(int index, String instruction, String prevHash) {
 			this.index = index;
-			this.tree = tree;
+			this.instruction = instruction;
 			this.prevHash = prevHash;
 			this.hash =  calculateHash();
-		}
-		
-		public AVL<T> getAVL() {
-			return tree;
 		}
 		
 		public String getPrevHash() {
@@ -62,10 +58,10 @@ public class BlockChain<T> {
 			return instruction;
 		}
 		
-		public String calculateHash() {
+		public String calculateHash() {  //calculates a valid hash according to zeros 
 			
 			int nonce = 0;
-			String comb = getIndex() + getInstruction() + getAVL() + getPrevHash();
+			String comb = getIndex() + getInstruction() + getPrevHash();
 			String hash = sha256(comb + nonce);
 			
 			while(!validHash(hash)) {
@@ -77,6 +73,11 @@ public class BlockChain<T> {
 			return hash;
 		}
 		
+		public String calculateHashNoNonce() {  //calculates hash of Block with current nonce and data.
+		
+			String combination = getIndex() + getInstruction() + getPrevHash() + getNonce();
+			return sha256(combination);
+		}		
 		private boolean validHash(String hash) {
 
 			boolean valid = true;
@@ -110,42 +111,40 @@ public class BlockChain<T> {
 		}
 	}
 
-	public void add(String action, int number){
+	public void add(String action, int number){  //No entiendo que seria el String action, osea si estas llamando a add ya sabes que es un "add" + number
 
 	}
 	
-	public void createGenesisBlock() {
-
-		AVL<T> tree = new AVL<T>((Comparator<T>) new MyComparator());
-		String dummyHash = "00000000";
-		blockChain.add(new Block<T>(0,"No instruction",tree,dummyHash));
+	private void createGenesisBlock() {
+		
+		blockChain.add(new Block(0,"No instruction","00000000"));
 	}
 	
-	public void addElement(T elem) {
+	public void addElement(Integer num) {   
 		
-		Block<T> latestBlock = getLatestBlock();
-		AVL<T> tree = latestBlock.getAVL();     //Need to make a copy of the tree, instead of getting the direct reference.
-		tree.add(elem);						
-		String prevHash = latestBlock.getHash();
+		Block lastBlock = getLatestBlock();
+		int index = lastBlock.getIndex() + 1;
+		boolean inserted = tree.add(num,index);	
+		String instruction = "add" + num.toString() + (inserted? "true" : "false");
+		Block block = new Block(index,instruction,lastBlock.getHash());
+		blockChain.add(block);
 		
-		Block<T> block = new Block<T>(getChain().size(),"add" + elem.toString(),tree,prevHash);
-		getChain().add(block);
 	}
 	
-	public List<Block<T>> getChain() {
+	public List<Block> getChain() {
 		return blockChain;
 	}
 	
 	public boolean validateChain() {
 		
-		List<Block<T>> bc = getChain();
+		List<Block> bc = getChain();
 		
 		for(int i=1 ; i < bc.size() ; i++) {
 			
-			Block<T> current = bc.get(i);
-			Block<T> prev = bc.get(i-1);
+			Block current = bc.get(i);
+			Block prev = bc.get(i-1);
 			
-			if(current.getHash() !=  current.calculateHash()) 
+			if(current.getHash() !=  current.calculateHashNoNonce()) 
 				return false;
 			if(current.getPrevHash() != prev.getHash())
 				return false;
@@ -153,18 +152,36 @@ public class BlockChain<T> {
 		return true;
 	}
 	
-	public void remove(T elem) {
-		
-		Block<T> latestBlock = getLatestBlock();
-		AVL<T> tree = latestBlock.getAVL();
-		tree.delete(elem);
-		String prevHash = latestBlock.getHash();
-		Block<T> block = new Block<T>(getChain().size(),"remove" + elem.toString(),tree,prevHash);
-		getChain().add(block);
+	public void remove(Integer num) {
+			
+		Block lastBlock = getLatestBlock();
+		int index = lastBlock.getIndex() + 1;
+		boolean removed = tree.remove(num,index);	
+		String instruction = "remove" + num.toString() + (removed? "true" : "false");
+		Block block = new Block(index,instruction,lastBlock.getHash());
+		blockChain.add(block);
+
 	}
 	
-	public Block<T> getLatestBlock() {
+	public void lookup(Integer num) {
+		
+		Block lastBlock = getLatestBlock();
+		int index = lastBlock.getIndex() + 1;
+		DataPair<Block,boolean> info = tree.contains(num);	 //Deberia retornar un data pair con true/false si encontro o no y el bloque para poder tener los indices
+		boolean found = info.getElement2();
+		String instruction = "lookup" + num.toString() + (found? "true" : "false");
+		Block block = new Block(index,instruction,lastBlock.getHash());
+		blockChain.add(block);
+		
+		if(found) {
+			
+			System.out.println("Indexes that modified Node with data (" + num.toString() + ") : " + info.getElement1().getSet().toString());			
+		}
+		else {
+			System.out.println("Element (" + num.toString() + ") was not found in AVL Tree" );
+		}
+	}
+	public Block getLatestBlock() {
 		return getChain().get(getChain().size() - 1);
 	}
-
 }
