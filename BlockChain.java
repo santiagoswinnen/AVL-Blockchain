@@ -125,7 +125,7 @@ public class BlockChain {
      * @param action Mehtod to call
      * @param number
      */
-	public void operate(String action, int number){  //No entiendo que seria el String action, osea si estas llamando a add ya sabes que es un "add" + number
+	public void operate(String action, int number){  
         int currentIndex = size();
         Boolean success;
         String instruction;
