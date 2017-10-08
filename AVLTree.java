@@ -3,7 +3,7 @@ import com.sun.org.apache.xerces.internal.impl.dv.xs.TypeValidator;
 import java.util.*;
 
 /**
- *  @author L√≥r√°nt Mikol√°s
+ *  @author LÛr·nt Mikol·s
  */
 public class AVLTree<T> {
     private Node<T> root;
@@ -390,20 +390,23 @@ public class AVLTree<T> {
 
 
 
-    public boolean contains(T key) {
-        return contains(key, root);
+    public DataPair<Block,Boolean> contains(T key) {
+    	DataPair<Block,Boolean> info = new DataPair<Block,Boolean>(null,false);
+        contains(key,root,info);
+        return info;
     }
 
-    private boolean contains(T key, Node<T> current) {
+    private void contains(T key, Node<T> current, DataPair<Block,Boolean> info) {
         if (current == null)
-            return false;
+            return;
         if (cmp.compare(key, current.key) < 0) {
-            return contains(key, current.left);
+            contains(key, current.left, info);
         }
         if (cmp.compare(key, current.key) > 0) {
-            return contains(key, current.right);
+            contains(key, current.right, info);
         }
-        return true;
+        info.setElement1(current);
+        info.setElement2(true);
 
     }
 
