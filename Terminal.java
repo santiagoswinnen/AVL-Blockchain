@@ -51,7 +51,7 @@ public class Terminal {
      * @param zeros amount of zeros needed at the start of block chain hashcode to be considered valid
      */
     public void run(int zeros) {
-        BlockChain<Integer> bc = new BlockChain<>(zeros);
+        BlockChain bc = new BlockChain(zeros,this);
         System.out.println("Block chain has been successfully created");
         boolean exit = false;
         Scanner scanner = new Scanner(System.in);
@@ -103,7 +103,7 @@ public class Terminal {
             boolean isNumber = validateNumber(number.toCharArray());
             if(isNumber) {
                 String num = number.toString();
-                bc.add(action,Integer.parseInt(num));
+                bc.operate(action,Integer.parseInt(num));
             } else {
                 System.out.println("Invalid number, try again please");
             }
@@ -113,6 +113,14 @@ public class Terminal {
             System.out.println("Invalid action, try again please");
         }
 
+    }
+
+    /**
+     * Prints message passed as parameter.
+     * @param msg
+     */
+    public void printMessage(String msg){
+        System.out.println(msg);
     }
 
 

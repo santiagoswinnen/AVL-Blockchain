@@ -1,9 +1,8 @@
-import com.sun.org.apache.xerces.internal.impl.dv.xs.TypeValidator;
 
 import java.util.*;
 
 /**
- *  @author Lóránt Mikolás
+ *  @author Lï¿½rï¿½nt Mikolï¿½s
  */
 public class AVLTree<T> {
     private Node<T> root;
@@ -389,25 +388,33 @@ public class AVLTree<T> {
     }
 
 
-
-    public DataPair<Block,Boolean> contains(T key) {
-    	DataPair<Block,Boolean> info = new DataPair<Block,Boolean>(null,false);
-        contains(key,root,info);
-        return info;
+    /**
+     * Searches for key in the Tree and returns modIndex set.
+     * This method serves as a wrapper
+     * @param key to be searched in tree.
+     * @return a DatarPair in which element1 is a Boolean (true if key was found, false otherwise)
+     * and a Set of Integers with the indexes of the blocks that modified that node.
+     */
+    public DataPair<Boolean,Set<Integer>> lookup(T key) {
+        return lookup(key,root);
     }
 
-    private void contains(T key, Node<T> current, DataPair<Block,Boolean> info) {
+    /**
+     * Searches for key in the Tree and returns modIndex set recursively.
+     * @param key to be searched in tree.
+     * @return a DatarPair in which element1 is a Boolean (true if key was found, false otherwise)
+     * and a Set of Integers with the indexes of the blocks that modified that node.
+     */
+    private DataPair<Boolean,Set<Integer>> lookup(T key, Node<T> current) {
         if (current == null)
-            return;
+             return new DataPair<>(false, null);
         if (cmp.compare(key, current.key) < 0) {
-            contains(key, current.left, info);
+            return lookup(key, current.left);
         }
         if (cmp.compare(key, current.key) > 0) {
-            contains(key, current.right, info);
+            return lookup(key, current.right);
         }
-        info.setElement1(current);
-        info.setElement2(true);
-
+        return new DataPair<>(true, current.modIndex);
     }
 
 
