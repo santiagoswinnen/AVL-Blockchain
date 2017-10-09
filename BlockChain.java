@@ -118,6 +118,10 @@ public class BlockChain {
 		    }
 			
 		}
+
+		public void setinstruction(String data){
+			this.instruction = data;
+		}
 	}
 
     /**
@@ -140,16 +144,21 @@ public class BlockChain {
                             } else {
                                 terminal.printMessage("Element (" + number + ") was not found in AVL Tree" );
                             }break;
-            case "validate" : success = validateChain();
-			      terminal.printMessage(success.toString());	
             default: throw new IllegalOperationException("not a valid operation to perform");
-            /*falta agregar case modify y validate*/
-
         }
         instruction = action + number + success.toString();
         Block block = new Block(currentIndex, instruction, getLatestBlock().getHash());
 
 	}
+
+	public void modify(int number, String data){
+		if(number < 0 || number >= size()){
+			throw new IndexOutOfBoundsException("Index is out of bounds. BlockChain does not contain that block.");
+		}
+		blockChain.get(number).setinstruction(data);
+		return;
+	}
+
 
 
 	private void createGenesisBlock() {

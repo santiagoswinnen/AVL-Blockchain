@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 /**
@@ -5,6 +7,7 @@ import java.util.Scanner;
  */
 
 public class Terminal {
+
 
     /**
      * Reads user input from terminal
@@ -76,44 +79,72 @@ public class Terminal {
 
     public void readInstruction(String instruction, BlockChain bc) {
         char[] chars = instruction.toCharArray();
-        int i;
-        String action= new String();
-        for(i = 0; i < chars.length && chars[i] != ' '; i++) {
-            char current = chars[i];
-            action = action + String.valueOf(current);
-        }
-        i++;
-
+        int i = 0;
+        String action = getStringUntilChar(chars, i, ' ');
+        i += action.length() + 1;
         /*
          * if the first word is "validate" and no other argument is read,
          * then perform the action validate on the block chain and return
          */
 
-        if(action.equals("validate")) {
-            if(action.equals(instruction)) {
-                boolean c = bc.validateChain();
-                System.out.println(c);
-                return;
+        if (action.equals("validate") && i == instruction.length()) {
+            System.out.println(bc.validateChain());
+        } else if (action.equals("add") || action.equals("remove") || action.equals("lookup")) {
+            String number = getStringUntilChar(chars, i, ' ');
+            i += number.length();
+            if (i == instruction.length()) {
+                boolean isNumber = validateNumber(number.toCharArray());
+                if (isNumber) {
+                    bc.operate(action, Integer.parseInt(number));
+                } else {
+                    System.out.println("Invalid number, try again please.");
+                }
             }
-        } else if(action.equals("add") || action.equals("remove") || action.equals("lookup")) {
-            String number = new String();
-            for(int j = 0; i < chars.length && chars[i] != ' '; i++, j++) {
-                number = number + chars[i];
-            }
-            boolean isNumber = validateNumber(number.toCharArray());
-            if(isNumber) {
-                String num = number.toString();
-                bc.operate(action,Integer.parseInt(num));
-            } else {
-                System.out.println("Invalid number, try again please");
-            }
-        } else if(action.equals("modify")) {
-            /* Modify case missing. To be done soon!! */
-        } else {
-            System.out.println("Invalid action, try again please");
-        }
+        } else if (action.equals("modify")) {
+            String number = getStringUntilChar(chars, i, ' ');
+            int num = Integer.parseInt(number);
+            if(num >= 0 && num < bc.size()){
+                i += number.length() + 1;
+                if(chars[i] == '[') {
+                    i++;
+                    String path = getStringUntilChar(chars, i, ']');
+                    i+= path.length();
+                    if(chars[i] == ']') {
+                        StringBuilder data = new StringBuilder();
+                        if(readFromPath(path, data))
+                            bc.modify(num, data.toString());
 
+                    }
+                }
+            }
+        } else {
+            System.out.println("Invalid action, try again please.");
+        }
     }
+
+    public boolean readFromPath(String path, StringBuilder data){
+        try {
+            File file = new File(path);
+            Scanner scanner = new Scanner(file);
+            while(scanner.hasNextLine()) {
+                data.append(scanner.nextLine());
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Given path is wrong.");
+            System.out.println("modify N [path]");
+            return false;
+        }
+        return true;
+    }
+    private static String getStringUntilChar(char[] arr, int i, char end) {
+        String ret = new String();
+        while(i < arr.length && arr[i] != end) {
+            ret = ret + arr[i];
+            i++;
+        }
+        return ret;
+    }
+
 
     /**
      * Prints message passed as parameter.
