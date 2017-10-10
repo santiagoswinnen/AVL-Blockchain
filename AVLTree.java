@@ -27,6 +27,11 @@ public class AVLTree<T> {
             this.key = key;
         }
 
+        public Node(T key, int index){
+            this(key);
+            this.modIndex.add(index);
+        }
+
         public Node(T key, Node<T> left, Node<T> right) {
             this.left = left;
             this.right = right;
@@ -35,7 +40,7 @@ public class AVLTree<T> {
 
         @Override
         public String toString(){
-            return "-" + key.toString()  + "(" + height + ")" +"-";
+            return "-" + key.toString()  + "(" + height + ")"  + modIndex + "-";
         }
 
         public int getHeight(){
@@ -87,7 +92,7 @@ public class AVLTree<T> {
         /*if the leaf is reached, add a new node*/
         if(current == null){
             System.out.println("agregue uno nuevo");
-            return new Node<>(key);
+            return new Node<>(key, blockIndex);
         }
         /*advance through left child*/
         if(cmp.compare(key,current.key) < 0 ){
@@ -165,7 +170,7 @@ public class AVLTree<T> {
         Node<T> auxright = current.right;
         current.right = auxright.left;
         auxright.left = current;
-        current.height = Math.max(current.getLeftChildHeight(), current.getRightChildHeight());
+        current.height = Math.max(current.getLeftChildHeight() + 1, current.getRightChildHeight() + 1);
         auxright.height = Math.max(auxright.height, current.height + 1);
         current.modIndex.add(blockIndex);
         auxright.modIndex.add(blockIndex);
@@ -241,7 +246,7 @@ public class AVLTree<T> {
         }
         /*advance through right child*/
         else if(cmp.compare(key, current.key) > 0){
-            aux = remove(key, current.left, blockIndex);
+            aux = remove(key, current.right, blockIndex);
             node = aux.getElement2();
             if(current.right != node) current.modIndex.add(blockIndex);
             current.right = node;
@@ -273,11 +278,9 @@ public class AVLTree<T> {
             return null;
         /*has just left child*/
         } else if (node.right == null) {
-            node.right.modIndex.add(blockIndex);
             return node.left;
         /*has just right child*/
         } else if (node.left == null) {
-            node.left.modIndex.add(blockIndex);
             return node.right;
         /*search for the successor inorder*/
         } else {
@@ -341,46 +344,40 @@ public class AVLTree<T> {
         getInRange(current.left, result, inf, sup, cmp);
         return;
     }
+    public void print(){
+        printNodesByLevel();
 
+    }
 
 
 
 
     public void printNodesByLevel() {
         Deque<Node<T>> queue = new LinkedList<>();
-        System.out.println("jeeywsya");
         if (root == null){
-
-            return;}
+            return;
+        }
         queue.offer(root);
         int i = 0 ;
-        int j = 10;
         double number = 1;
         while (!queue.isEmpty()) {
             Node<T> aux = queue.remove();
-
             if(	Math.log(number)/Math.log(2.0) == i ){
                 System.out.println(" LEVEL + 1 = " + Math.log(number)/Math.log(2.0) );
                 i++;
-                j = j - 2 ;
-                int k = 0;
-                while(k < j){
-                    k++;
-                    System.out.print("  ");
-                }
             }
-
-            System.out.print( aux.toString() + "      ");
-
-            if (aux.left != null) {
+            if (aux != null) {
                 queue.offer(aux.left);
-            }
-            if (aux.right != null) {
                 queue.offer(aux.right);
+                System.out.print( aux.toString() + "    ");
+            } else {
+                System.out.print("-EMPTY-    ");
             }
             number++;
         }
     }
+
+
 
     public static <T> int getHeight(Node<T> current) {
         if (current == null) return -1;
