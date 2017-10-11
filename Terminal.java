@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -14,21 +15,25 @@ public class Terminal {
      * @param args array of Strings (main program arguments).
      */
     public void start(String[] args){
-        if(args[0].equals("zeros")) {
-            char[] number = args[1].toCharArray();
-            boolean isNumber = validateNumber(number);
-            if(isNumber){
-                int zeros = Integer.parseInt(args[1]);
-                if(zeros>16 || zeros <4) {
-                    System.out.println("Invalid amount of zeros");
+        try {
+            if (args[0].equals("zeros")) {
+                char[] number = args[1].toCharArray();
+                boolean isNumber = validateNumber(number);
+                if (isNumber) {
+                    int zeros = Integer.parseInt(args[1]);
+                    if (zeros > 16 || zeros < 4) {
+                        System.out.println("Invalid amount of zeros");
+                    } else {
+                        run(zeros);
+                    }
                 } else {
-                    run(zeros);
+                    System.out.println("Error: Invalid number");
                 }
             } else {
-                System.out.println("Error: Invalid number");
+                System.out.println("Error: Invalid argument");
             }
-        } else {
-            System.out.println("Error: Invalid argument");
+        } catch( ArrayIndexOutOfBoundsException e) {
+            System.out.println("No zeros passed as argument");
         }
     }
 
@@ -60,6 +65,7 @@ public class Terminal {
         Scanner scanner = new Scanner(System.in);
         String input;
         while(exit == false) {
+            visualReport(bc);
             input = scanner.nextLine();
             if(input.equals("exit")){
                 exit = true;
@@ -154,5 +160,21 @@ public class Terminal {
         System.out.println(msg);
     }
 
+    public void printDashedLine() {
+        System.out.println("--------------------------------------------------------------");
+        System.out.println();
+    }
+
+    public void visualReport(BlockChain bc){
+        printDashedLine();
+        System.out.println("BlockChain:");
+        System.out.println(bc.toString());
+        System.out.println();
+        System.out.println("AVLTree: ");
+        System.out.println();
+        bc.showInsider();
+        printDashedLine();
+        System.out.println("Command :");
+    }
 
 }
