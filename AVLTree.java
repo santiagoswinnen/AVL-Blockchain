@@ -12,7 +12,7 @@ public class AVLTree<T> {
         this.cmp = cmp;
     }
 
-    private static class Node<T> {
+    private static class Node<T> implements PrintableNode {
         private Node<T> left;
         private Node<T> right;
         private T key;
@@ -40,13 +40,20 @@ public class AVLTree<T> {
 
         @Override
         public String toString(){
-            return "-" + key.toString()  + "(" + height + ")"  + modIndex + "-";
+            return  key.toString()  + "(" + height + ")"  + modIndex;
         }
 
         public int getHeight(){
             return height;
         }
 
+        public Node<T> getLeft() {
+            return left;
+        }
+
+        public Node<T> getRight() {
+            return right;
+        }
 
         public int getRightChildHeight(){
             if(right == null){
@@ -63,6 +70,9 @@ public class AVLTree<T> {
         }
     }
 
+    public Node<T> getRoot() {
+        return root;
+    }
 
     /**
      * Adds a new element to the AVLTree.
@@ -91,7 +101,6 @@ public class AVLTree<T> {
         Node<T> aux;
         /*if the leaf is reached, add a new node*/
         if(current == null){
-            System.out.println("agregue uno nuevo");
             return new Node<>(key, blockIndex);
         }
         /*advance through left child*/
@@ -416,27 +425,6 @@ public class AVLTree<T> {
 
 
 
-    public static <T> boolean isAVL(AVLTree<T> tree) {
-        return isAVL(tree.root, tree.cmp);
-    }
-
-    public static <T> boolean isAVL(Node<T> bst, Comparator<T> cmp) {
-        if (bst == null) return true;
-        int l, r;
-        Node<T> current = bst;
-        l = getHeight(current.left);
-        r = getHeight(current.right);
-        if (Math.abs(l - r) <= 1 && isAVL(current.left, cmp) && isAVL(current.right, cmp)) {
-            if (current.left != null && cmp.compare(current.key, current.left.key) < 0) {
-                return false;
-            }
-            if (current.right != null && cmp.compare(current.key, current.right.key) > 0) {
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }
 
     public int getLevel(T key) {
         return getLevel(key, this.root, 0, this.cmp);

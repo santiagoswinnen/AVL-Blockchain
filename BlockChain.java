@@ -8,6 +8,7 @@ public class BlockChain {
 	private Terminal terminal;
 	private int zeros;
 
+
 	private AVLTree<Integer> tree = new AVLTree<>(new Comparator<Integer>() {
         @Override
         public int compare(Integer o1, Integer o2) {
@@ -122,6 +123,12 @@ public class BlockChain {
 		public void setinstruction(String data){
 			this.instruction = data;
 		}
+
+		public String toString() {
+			String ret = "[ " + "index:" + index + "/nonce: " + nonce;
+			ret += "/instruction: " + instruction + "]";
+			return ret;
+		}
 	}
 
     /**
@@ -148,7 +155,11 @@ public class BlockChain {
         }
         instruction = action + number + success.toString();
         Block block = new Block(currentIndex, instruction, getLatestBlock().getHash());
+        add(block);
+	}
 
+	public void add(Block block){
+		blockChain.add(block);
 	}
 
 	public void modify(int number, String data){
@@ -196,5 +207,22 @@ public class BlockChain {
 	public Block getLatestBlock() {
 
 		return blockChain.get(size() - 1);
+	}
+
+	@Override
+	public String toString(){
+		String ret = new String();
+		int i = 0;
+		for(Block block: blockChain){
+			ret += block.toString() + "-->";
+			i++;
+			if(i%4 == 0) ret += "\n";
+		}
+		return ret;
+
+	}
+
+	protected void showInsider(){
+		TreePrinter.print(tree.getRoot());
 	}
 }
