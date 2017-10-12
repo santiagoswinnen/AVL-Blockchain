@@ -127,6 +127,7 @@ public class BlockChain {
 		public String toString() {
 			String ret = "[ " + "index:" + index + "/nonce: " + nonce;
 			ret += "/instruction: " + instruction + "]";
+			ret += "prevHash: " + prevHash + " Hash: " + hash;
 			return ret;
 		}
 	}
