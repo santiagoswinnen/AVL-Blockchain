@@ -1,9 +1,15 @@
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  *  @author L�r�nt Mikol�s
  */
+
 public class AVLTree<T> {
     private Node<T> root;
     private Comparator<T> cmp;
@@ -523,6 +529,10 @@ public class AVLTree<T> {
     private int size(Node<T> current) {
         if (current == null) return 0;
         return 1 + size(current.right) + size(current.left);
+    }
+    
+    public void clearTree() {
+    	this.root = null;
     }
 
 }

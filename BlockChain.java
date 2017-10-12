@@ -27,6 +27,9 @@ public class BlockChain {
 	public int getZeros() {
 		return zeros;
 	}
+	public AVLTree<Integer> getTree() {
+		return tree;
+	}
 	
 	private class Block {
 		
@@ -134,7 +137,7 @@ public class BlockChain {
 
     /**
      * Receives instruction to perform on AVLTree, calls the correct method to excecute it and stores result in new block.
-     * @param action Mehtod to call
+     * @param action Method to call
      * @param number
      */
 	public void operate(String action, int number){  
