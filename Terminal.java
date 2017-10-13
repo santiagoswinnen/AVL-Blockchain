@@ -131,6 +131,8 @@ public class Terminal {
                     } else {
                         System.out.println("Invalid arguments, try again please");
                     }
+                } else {
+                    System.out.println("Invalid path expression, try again please");
                 }
             }
         } else {
