@@ -46,33 +46,4 @@ class AVLTreeTest {
         tree2.add(2,1);
         assertTrue(tree1.equals(tree2));
     }
-
-    @Test
-    void test() {
-    }
-
-    @Test
-    void balance() {
-    }
-
-    @Test
-    void getBalance() {
-    }
-
-    @Test
-    void remove() {
-    }
-
-    @Test
-    void deleteKey() {
-    }
-
-    @Test
-    void getInRange() {
-    }
-
-    @Test
-    void equals() {
-    }
-
 }
