@@ -196,10 +196,12 @@ public class BlockChain {
 			Block current = bc.get(i);
 			Block prev = bc.get(i-1);
 			
-			if(current.getHash() !=  current.calculateHashNoNonce()) 
+			if(!current.getHash().equals(current.calculateHashNoNonce())) {
 				return false;
-			if(current.getPrevHash() != prev.getHash())
+			}
+			if(!current.getPrevHash().equals(prev.getHash())){
 				return false;
+			}
 		}
 		return true;
 	}
