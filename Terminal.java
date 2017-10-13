@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -92,8 +91,7 @@ public class Terminal {
          * if the first word is "validate" and no other argument is read,
          * then perform the action validate on the block chain and return
          */
-
-        if (action.equals("validate") && i == instruction.length()) {
+        if (action.equals("validate") && (i - 1) == instruction.length()) {
             System.out.println(bc.validateChain());
         } else if (action.equals("add") || action.equals("remove") || action.equals("lookup")) {
             String number = getStringUntilChar(chars, i, ' ');
@@ -105,21 +103,31 @@ public class Terminal {
                 } else {
                     System.out.println("Invalid number, try again please.");
                 }
+            } else {
+                System.out.println("Invalid action, try again please.");
             }
         } else if (action.equals("modify")) {
             String number = getStringUntilChar(chars, i, ' ');
-            int num = Integer.parseInt(number);
-            if(num >= 0 && num < bc.size()){
-                i += number.length() + 1;
+            int num = -1;
+            try {
+                num = Integer.parseInt(number);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number entry");
+            } if(num >= 0) {
+                i += (number.length() + 1);
                 if(chars[i] == '[') {
                     i++;
                     String path = getStringUntilChar(chars, i, ']');
                     i+= path.length();
                     if(chars[i] == ']') {
                         StringBuilder data = new StringBuilder();
-                        if(readFromPath(path, data))
-                            bc.modify(num, data.toString());
-
+                        if(readFromPath(path, data)) {
+                            try {
+                                bc.modify(num, data.toString());
+                            } catch (IndexOutOfBoundsException e) {
+                                System.out.println("Invalid index for current block chain, try again please");
+                            }
+                        }
                     }
                 }
             }

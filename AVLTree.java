@@ -24,7 +24,7 @@ public class AVLTree<T> {
         private T key;
         private int height = 0;
         /*indexes of the BlockChain's blocks  that affected this node*/
-        private HashSet<Integer> modIndex = new HashSet<>();
+        private Set<Integer> modIndex = new HashSet<>();
 
         public Node(T key) {
             height = 0;
