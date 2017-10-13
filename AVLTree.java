@@ -46,7 +46,7 @@ public class AVLTree<T> {
 
         @Override
         public String toString(){
-            return  key.toString()  + "(" + height + ")"  + modIndex;
+            return  key.toString();
         }
 
         public int getHeight(){
@@ -145,6 +145,7 @@ public class AVLTree<T> {
      */
     public Node<T> balance(Node<T> current, int blockIndex){
         int balance = getBalance(current);
+
         /*checks FB*/
         if(balance > 1){
             /*left left*/
@@ -160,10 +161,10 @@ public class AVLTree<T> {
         }
         /*checks FB*/
         else if(balance < -1){
+
             /*right right*/
             if(getBalance(current.right) <= 0) {
                 current = leftRotation(current, blockIndex);
-
             }
             /*right left*/
             else{
@@ -303,9 +304,8 @@ public class AVLTree<T> {
             Node<T> ret = aux.getElement2();
             /*it may occur that the inorder successor is the right child*/
             if(ret == node.right) ret.right = null;
-            else ret.right = node.right;
+            else ret.right = aux.getElement1();
             ret.left = node.left;
-
             ret.height = Math.max(ret.getLeftChildHeight() + 1, ret.getRightChildHeight() + 1);
             ret.modIndex.add(blockIndex);
             return ret;
@@ -328,7 +328,9 @@ public class AVLTree<T> {
         if(current.left != null){
             /*call recursion*/
             aux = eliminateMostLeft(current.left, blockIndex);
-            if(current.left != aux.getElement1()) current.modIndex.add(blockIndex);
+            if(current.left != aux.getElement1()){ current.modIndex.add(blockIndex);
+
+            }
             current.left = aux.getElement1();
         } else {
             return new DataPair<>(null, current);

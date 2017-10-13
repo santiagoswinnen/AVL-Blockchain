@@ -119,7 +119,7 @@ public class Terminal {
                     i++;
                     String path = getStringUntilChar(chars, i, ']');
                     i+= path.length();
-                    if(chars[i] == ']') {
+                    if(chars[i] == ']' && i+1 == instruction.length()) {
                         StringBuilder data = new StringBuilder();
                         if(readFromPath(path, data)) {
                             try {
@@ -128,6 +128,8 @@ public class Terminal {
                                 System.out.println("Invalid index for current block chain, try again please");
                             }
                         }
+                    } else {
+                        System.out.println("Invalid arguments, try again please");
                     }
                 }
             }
