@@ -7,9 +7,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *  @author L�r�nt Mikol�s
+ *  @author Lï¿½rï¿½nt Mikolï¿½s
  */
-
+/**
+ *	Adelson Velskii Landis tree
+ */
 public class AVLTree<T> {
     private Node<T> root;
     private Comparator<T> cmp;
@@ -18,13 +20,21 @@ public class AVLTree<T> {
         this.cmp = cmp;
     }
 
+       
+    /**
+     * Node of an AVLTree. Contains a key of type <T>, has left and right children nodes, 
+     * as well as a height in the tree and a list of indices corresponding to blocks in a BlockChain 
+     * that have modified it
+     *	@see PrintableNode
+     */
     private static class Node<T> implements PrintableNode {
         private Node<T> left;
         private Node<T> right;
         private T key;
         private int height = 0;
+        
         /*indexes of the BlockChain's blocks  that affected this node*/
-        private Set<Integer> modIndex = new HashSet<>();
+        private HashSet<Integer> modIndex = new HashSet<>();
 
         public Node(T key) {
             height = 0;
@@ -44,6 +54,14 @@ public class AVLTree<T> {
             this.key = key;
         }
 
+        
+        /**
+         * Returns a string describing the node. 
+         * <p>
+         * The string contains the node's key, its height in the tree and 
+         * all of the indices of the blocks in the BlockChain that have modified this node.
+         * @return the node's information in a string
+         */
         @Override
         public String toString(){
             return  key.toString()  + "(" + height + ")"  + modIndex;
@@ -61,6 +79,12 @@ public class AVLTree<T> {
             return right;
         }
 
+        
+        /**
+         * Returns the height of the node's right child node. If the node 
+         * does not have a right child, returns -1
+         *	@return the height of right child node
+         */
         public int getRightChildHeight(){
             if(right == null){
                 return -1;
@@ -68,6 +92,12 @@ public class AVLTree<T> {
             return right.height;
         }
 
+        
+        /**
+         * Returns the height of the node's left child node. If the node 
+         * does not have a left child, returns -1
+         *	@return the height of left child node
+         */
         public int getLeftChildHeight(){
             if(left == null){
                 return -1;
@@ -75,13 +105,16 @@ public class AVLTree<T> {
             return left.height;
         }
     }
-
+    //End Node
+    
+    
     public Node<T> getRoot() {
         return root;
     }
 
+    
     /**
-     * Adds a new element to the AVLTree.
+     * Adds a new element to the AVLTree, in a new node.
      * This method serves as a wrapper.
      * @param key element to add.
      * @param blockIndex index of the BlockChain's block that has the add operation.
@@ -94,14 +127,16 @@ public class AVLTree<T> {
         return true;
     }
 
+    
     /**
      * Adds a new element to the AVLTree recursively. Checks balance, updates height and
-     * and updates the indexes of the blocks that affected the node on the way back of the
-     * recursion.
+     * updates the indices of the blocks that have affected the node on the way back of the
+     * recursion. Once added, tree is checked for balance.
      * @param key element to add.
      * @param current current element in the recursion.
      * @param blockIndex index of the BlockChain's block that has the add operation.
      * @return child node in recursion or null if key is already present in the AVLTree.
+     * @see balance
      */
     private Node<T> add(T key, Node<T> current, int blockIndex) {
         Node<T> aux;
@@ -136,16 +171,23 @@ public class AVLTree<T> {
         return current;
     }
 
+    
     /**
      * Checks balance of the node.
-     * @param current Node that is verified for a correct factor of balance.
+     * <p>
+     * Balance is found by recursively taking the height of the left child and 
+     * subtracting the height of the right child. Any balance not -1, 0, or 1 signifies 
+     * an unbalanced tree. To restore balance, limbs of the tree are rotated.
+     * @param current Node, whose children will be checked for balance
      * @param blockIndex index of the BlockChain's block that has the add operation. It's used
      *                   in case  a rotation is needed.
      * @return a new node in case the current was affected by a rotation.
+     * @see leftRotation
+     * @see rightRotation
      */
     public Node<T> balance(Node<T> current, int blockIndex){
         int balance = getBalance(current);
-        /*checks FB*/
+        /*checks if skewed to the left*/
         if(balance > 1){
             /*left left*/
             if(getBalance(current.left) >= 0){
@@ -158,7 +200,7 @@ public class AVLTree<T> {
                 current = rightRotation(current, blockIndex);
             }
         }
-        /*checks FB*/
+        /*checks if skewed to the right*/
         else if(balance < -1){
             /*right right*/
             if(getBalance(current.right) <= 0) {
@@ -174,8 +216,13 @@ public class AVLTree<T> {
         return current;
     }
 
+    
     /**
-     * Performs a left rotation to the current node
+     * Performs a left rotation from the current node. 
+     * <p>
+     * The rotation acts on the current node, its right child, and its right child's left child. 
+     * The current is made to be the left child of its right child, and the right child's left child is made
+     * to be the right child of current. The former right child of current is returned.    
      * @param current node to be rotated.
      * @param blockIndex index of the BlockChain's block that has the add operation. Every node
      *                   affected by this rotation will update the indexes of the blocks that modified said node.
@@ -192,8 +239,14 @@ public class AVLTree<T> {
         if(current.right != null) current.right.modIndex.add(blockIndex);
         return auxright;
     }
+    
+    
     /**
-     * Performs a right rotation to the current node
+     * Performs a right rotation from the current node. 
+     * <p>
+     * The rotation acts on the current node, its left child, and its left child's right child. 
+     * The current is made to be the right child of its left child, and the left child's right child is made
+     * to be the left child of current. The former left child of current is returned.
      * @param current node to be rotated.
      * @param blockIndex index of the BlockChain's block that has the add operation. Every node
      *                   affected by this rotation will update the indexes of the blocks that modified said node.
@@ -212,22 +265,24 @@ public class AVLTree<T> {
     }
 
     /**
-     * Calculates the height diference between left and right child. An Empty AVLTree is considered
-     * balanced.
-     * @param current Node to get balance from.
-     * @return FB.
+     * Calculates the height difference between left and right child trees. 
+     * An Empty AVLTree is considered balanced.
+     * @param Current Node, whose children will be checked for balance
+     * @return Integer representing the left child's height - the right child's height
      */
     public int getBalance(Node<T> current){
         if(current == null) return 0;
         return current.getLeftChildHeight() - current.getRightChildHeight();
     }
 
+    
     /**
      * Removes a key from the AVLTree.
-     *  A DataPair is used to allow for two return values for the remove method.
+     * A DataPair is used to allow for two return values for the remove method.
      * @param key element to be removed from AVLTree.
      * @param blockIndex index of the BlockChain's block that has the remove operation.
      * @return true if removal was successful or false otherwise.
+     * @see DataPair
      */
     public boolean remove(T key, int blockIndex){
         DataPair<Boolean,Node<T>> aux = remove(key, root, blockIndex);
@@ -235,18 +290,21 @@ public class AVLTree<T> {
         return aux.getElement1();
 
     }
+    
+    
     /**
      * Removes a key from the AVLTree recursively. Checks balance, updates height and
-     * and updates the indexes of the blocks that affected the node on the way back of the
+     * updates the indexes of the blocks that affected the node on the way back of the
      * recursion.
-     * This method serves a wrapper. A DataPair is used to allow for two return values for the remove method.
+     * This method serves as a wrapper. A DataPair is used to allow for two return values for the remove method.
      * @param key element to be removed from AVLTree.
      * @param blockIndex index of the BlockChain's block that has the remove operation.
      * @return a DataPair. The element1 of the DataPair indicates if the removal was successful or not with a
      * boolean and element2 is the new child returned in the recursion.
+     * @see DataPair
      */
     private DataPair<Boolean, Node<T>> remove(T key, Node<T> current, int blockIndex){
-        /*if the element was not found returns false (unsuccessfull removal)*/
+        /*if the element was not found returns false (unsuccessful removal)*/
         if(current == null){
             return new DataPair<>(false,null);
         }
@@ -281,27 +339,29 @@ public class AVLTree<T> {
     }
 
     /**
-     * Removes key from the AVLTree in different ways depending on the right and left child.
+     * Removes key from the AVLTree in different ways depending on the existence of right and left children.
      * @param node  to be removed from the AVLTree/
      * @param blockIndex index of the BlockChain's block that has the remove operation.
      * @return the new node or null that will take the place of the removed node.
+     * @see DataPair
      */
 
     public Node<T> deleteKey( Node<T> node, int blockIndex) {
-        /*no childs*/
+        /*no children*/
         if (node.right == null && node.left == null) {
             return null;
-        /*has just left child*/
+        /*has only left child*/
         } else if (node.right == null) {
             return node.left;
-        /*has just right child*/
+        /*has only right child*/
         } else if (node.left == null) {
             return node.right;
-        /*search for the successor inorder*/
+        /*has both left and right children*/
+        /*search for the inorder successor*/
         } else {
             DataPair<Node<T>, Node<T>> aux = eliminateMostLeft(node.right, blockIndex);
             Node<T> ret = aux.getElement2();
-            /*it may occur that the inorder successor is the right child*/
+            /*it may be that the inorder successor is the right child*/
             if(ret == node.right) ret.right = null;
             else ret.right = node.right;
             ret.left = node.left;
@@ -313,12 +373,14 @@ public class AVLTree<T> {
     }
 
     /**
-     * Removes the successor inorder from its current position and returns it recursively.  Checks balance, updates height and
-     * and updates the indexes of the blocks that affected the node on the way back of the
-     * recursion.
+     * Removes the inorder successor from its current position and returns it recursively. 
+     * Checks balance, updates height and updates the indices of the blocks that
+     * affected the node on the way out of the recursion.
      * @param current node in the recursion.
      * @param blockIndex index of the BlockChain's block that has the remove operation.
      * @return a DataPair in which the element1 is the new child in recursion and element2 is the succesor inorder.
+     * @see DataPair
+     * @see NoSuccesorInorderException
      */
     private DataPair<Node<T>,Node<T>> eliminateMostLeft(Node<T> current, int blockIndex){
         if(current == null){
@@ -341,32 +403,54 @@ public class AVLTree<T> {
 
 
 
-
-    public List<T> getInRange(T inf, T sup) {
+    /**
+     * Copies the values of an AVLTree in a range between two values into a LinkedList. 
+     * A wrapper function.
+     * @param low minimum value to be copied
+     * @param high maximum value to be copied
+     * @return the list of values as a LinkedList
+     */
+    public List<T> getInRange(T low, T high) {
         List<T> result = new LinkedList<>();
-        getInRange(root, result, inf, sup, cmp);
+        getInRange(root, result, low, high, cmp);
         return result;
     }
 
-    private void getInRange(Node<T> current, List<T> result, T inf, T sup, Comparator<T> cmp) {
+    
+    /**
+     * Recursively moves through tree, adding all values between the minimum and maximum search 
+     * parameters into the list of values
+     * @param current current node being polled
+     * @param result the list of values
+     * @param low minimum value to be copied
+     * @param high maximum value to be copied
+     * @param cmp comparator to use
+     */
+    private void getInRange(Node<T> current, List<T> result, T low, T high, Comparator<T> cmp) {
         if (current == null) {
             return;
         }
-        if (cmp.compare(inf, current.key) < 0 && cmp.compare(inf, current.key) > 0) {
+        /*If value found between low and high, put into list*/
+        if (cmp.compare(low, current.key) < 0 && cmp.compare(high, current.key) > 0) {
             result.add(current.key);
         }
-        getInRange(current.right, result, inf, sup, cmp);
-        getInRange(current.left, result, inf, sup, cmp);
+        getInRange(current.right, result, low, high, cmp);
+        getInRange(current.left, result, low, high, cmp);
         return;
     }
+    
+    
+    
+    
     public void print(){
         printNodesByLevel();
 
     }
 
-
-
-
+    
+    /**
+     * Prints the AVLTree to the screen by level, starting from the root node to the leaves.
+     */
     public void printNodesByLevel() {
         Deque<Node<T>> queue = new LinkedList<>();
         if (root == null){
@@ -393,7 +477,11 @@ public class AVLTree<T> {
     }
 
 
-
+    /**
+     * Finds and returns the height of any node by finding the maximum height of its children.
+     * @param current the node being polled for height
+     * @return	the height of that particular node
+     */
     public static <T> int getHeight(Node<T> current) {
         if (current == null) return -1;
         return 1 + Math.max(getHeight(current.left), getHeight(current.right));
@@ -431,11 +519,25 @@ public class AVLTree<T> {
 
 
 
-
+    /**
+     * Finds and returns the level of any given node in the tree, or -1 if never found.
+     * A wrapper function
+     * @param key the key being searched 
+     * @return	the level at which the key was found, as an integer
+     */
     public int getLevel(T key) {
         return getLevel(key, this.root, 0, this.cmp);
     }
 
+    
+    /**
+     * Finds and returns the level of any given node in a tree, or -1 if never found.
+     * @param key the value being searched
+     * @param current the current given node
+     * @param level the current level in the tree
+     * @param cmp the comparator being used
+     * @return the level at which the key was found, or -1 if not found
+     */
     private int getLevel(T key, Node<T> current, int level, Comparator<T> cmp) {
         if (current == null) return -1;
         if (current.key.equals(key)) return level;
@@ -447,10 +549,22 @@ public class AVLTree<T> {
         return -1;
     }
 
+    
+    /**
+     * Finds and returns the number of leaves of the entire AVLTree.
+     * A wrapper function
+     * @return the number of leaves
+     */
     public int getLeavesCount() {
         return getLeavesCount(this.root);
     }
 
+    
+    /**
+     * Finds and returns the number of leaves of any given tree or subtree.
+     * @param current any current given node
+     * @return the number of leaves stemming from the given node
+     */
     public int getLeavesCount(Node<T> current) {
         if (current == null) return 0;
         int aux = getLeavesCount(current.left) + getLeavesCount(current.right);
@@ -459,10 +573,21 @@ public class AVLTree<T> {
         return aux;
     }
 
+    /**
+     * Finds and returns the maximum value of the entire AVLTree.
+     * A wrapper function
+     * @return the maximum value
+     */
     public T getMax() {
         return getMax(this.root);
     }
 
+    
+    /**
+     * Finds and returns the maximum value of any tree or subtree
+     * @param current any given node
+     * @return the maximum value stemming from any given node of the AVLTree
+     */
     private T getMax(Node<T> current) {
         if (current == null) {
             return null;
@@ -473,11 +598,23 @@ public class AVLTree<T> {
         return current.key;
     }
 
+    
+    /**
+     * Prints the direct descendants of a given node in an AVLTree.
+     * A wrapper function
+     * @param node
+     */
     public void printDescendants(Node<T> node) {
         printDescendants(root, node, false);
 
     }
 
+    /**
+     * Prints to the screen the direct descendants of a given node in an AVLTree.
+     * @param current the current node being checked in the tree
+     * @param node the node with the descendants being searched
+     * @param descendant boolean of whether or not the current node is a direct descendant
+     */
     private void printDescendants(Node<T> current, Node<T> node, boolean descendant) {
         if (current == null) {
             return;
@@ -491,6 +628,11 @@ public class AVLTree<T> {
         }
     }
 
+    
+    /**
+     * Checks if the AVLTree is equal to the object
+     * A wrapper function
+     */
     public boolean equals(Object o) {
         if (o == null) return false;
         if (!(o instanceof AVLTree)) {
@@ -500,6 +642,14 @@ public class AVLTree<T> {
         return equals(root, bst.root);
     }
 
+    
+    /**
+     * Checks recursively through two trees to verify that they are equal in each and every node.
+     * @param current the current node of the base tree 
+     * @param other	the current node of the node being tested
+     * @return true if the node of which the nodes current and other are roots are exactly identical,
+     * false otherwise
+     */
     private boolean equals(Node<T> current, Node<T> other) {
         if (current == null && other == null)
             return true;
@@ -511,10 +661,21 @@ public class AVLTree<T> {
 
     }
 
+    
+    /**
+     * The hashCode of the entire AVLTree.
+     * A wrapper
+     */
     public int hashCode() {
         return hashCode(root);
     }
 
+    
+    /**
+     * Returns the hashCode of any given subtree
+     * @param current the given root node of a subtree
+     * @return the hash value of this tree
+     */
     private int hashCode(Node<T> current) {
         if (current == null)
             return 1;
@@ -522,15 +683,28 @@ public class AVLTree<T> {
     }
 
 
+    /**
+     * Finds and returns the number of nodes in the entire AVLTree
+     * @return the size of the tree
+     */
     public int size() {
         return size(root);
     }
 
+    
+    /**
+     * Finds and returns the number of nodes of any given AVLTree or subtree
+     * @param current any given root node
+     * @return this tree's number of nodes
+     */
     private int size(Node<T> current) {
         if (current == null) return 0;
         return 1 + size(current.right) + size(current.left);
     }
     
+    /**
+     * Deletes the tree by setting it's root to null
+     */
     public void clearTree() {
     	this.root = null;
     }
